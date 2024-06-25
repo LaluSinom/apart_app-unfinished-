@@ -30,44 +30,37 @@ class _signInState extends State<signIn> {
   }
 
 Future<void> _login() async {
-  if (_formKey.currentState!.validate()) {
-    final response = await http.post(
-      Uri.parse('http://192.168.234.1/backend/auth/login.php'),
-      body: {
-        'name': nameController.text,
-        'password': passwordController.text,
-      },
-    );
+    if (_formKey.currentState!.validate()) {
+      final response = await http.post(
+        Uri.parse('http://192.168.234.1/backend/auth/login.php'),
+        body: {
+          'name': nameController.text,
+          'password': passwordController.text,
+        },
+      );
 
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+      final data = jsonDecode(response.body);
 
-    final data = jsonDecode(response.body);
-
-    if (data['status'] == 200) {
-      print('Login successful');
-      if (data['role'] == 'admin') {
-        print('Navigating to AdminPage');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => AdminPage()),
-        );
-      } else if (data['role'] == 'user') {
-        print('Navigating to HomePage');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+      if (data['status'] == 200) {
+        if (data['result']['role'] == 'admin') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => AdminPage()),
+          );
+        } else if (data['result']['role'] == 'user') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        }
+      } else {
+        // Handle login failure
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed')),
         );
       }
-    } else {
-      print('Login failed');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed')),
-      );
     }
   }
-}
-
   
   @override
   Widget build(BuildContext context) {
@@ -169,7 +162,7 @@ Future<void> _login() async {
                   style: kTextFormFieldStyle(),
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.person),
-                    hintText: 'Name or E-mail',
+                    hintText: 'Username',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(15)),
                     ),
